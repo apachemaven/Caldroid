@@ -7,7 +7,7 @@ Caldroid is fully localized. Client can customize start day of the week for diff
 
 Caldroid can be used with Android 2.2 and above. Caldroid is extracted from [official Roomorama application](https://play.google.com/store/apps/details?id=com.roomorama)
 
-If you are using Caldroid in your app and keen to list it here, please open a new issue on Github :)
+If you found bugs specific to Caldroid, please open a new issue on Github. However for general Android questions (about layout, drawable, etc), you probably can find more information on StackOverflow.
 
 
 <img src="https://raw.github.com/roomorama/Caldroid/master/screenshot/1.png" width="270" style="margin-right:10px;">
@@ -16,18 +16,18 @@ If you are using Caldroid in your app and keen to list it here, please open a ne
 Setup
 =====
 
-**For Eclipse/ADT user**: please see tag [eclipse_project], download the source codes, check out the CaldroidSample to see how the library works.
+**For Eclipse/ADT user**: please see tag [eclipse_project](https://github.com/roomorama/Caldroid/releases/tag/eclipse_project), download the source codes, check out the CaldroidSample to see how the library works.
 
 To use in your project, reference the child library project as a library. If you see JAR mismatched error, replace your android-support-v4.jar to the jar inside Caldroid. Make sure you compile the project against Android 4.2 and above to allow nested fragment. See more at http://developer.android.com/about/versions/android-4.2.html#NestedFragments
 
-**For Android Studio user**: add `compile 'com.roomorama:caldroid:1.1.0’` to your gradle build file.
+**For Android Studio user**: add `compile 'com.roomorama:caldroid:1.1.7'` to your gradle build file.
 
 **For Maven user**:
 ```
 <dependency>
     <groupId>com.roomorama</groupId>
     <artifactId>caldroid</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.7</version>
 </dependency>
 ```
 
@@ -35,7 +35,7 @@ Features
 ========
 
 ##Flexible setup: can be embedded or shown as dialog
-To embed the caldroid fragment in your activity, use below code:
+If you support Android 2.2 and above, you can embed caldroid fragment in your activity with below code:
 
 ``` java
 CaldroidFragment caldroidFragment = new CaldroidFragment();
@@ -47,6 +47,21 @@ caldroidFragment.setArguments(args);
 
 FragmentTransaction t = getSupportFragmentManager().beginTransaction();
 t.replace(R.id.calendar1, caldroidFragment);
+t.commit();
+```
+
+If your app only target minSdkVersion 16 and above, you can use Caldroid too. First, you need to change your `Activity` class to `FragmentActivity`, and add support library to your project. You don't have to change how you use `android.app.Fragment`.
+
+```java
+CaldroidFragment caldroidFragment = new CaldroidFragment();
+Bundle args = new Bundle();
+Calendar cal = Calendar.getInstance();
+args.putInt(CaldroidFragment.MONTH, cal.get(Calendar.MONTH) + 1);
+args.putInt(CaldroidFragment.YEAR, cal.get(Calendar.YEAR));
+caldroidFragment.setArguments(args);
+
+android.support.v4.app.FragmentTransaction t = getSupportFragmentManager().beginTransaction();
+t.replace(R.id.cal, caldroidFragment);
 t.commit();
 ```
 
@@ -67,6 +82,7 @@ public final static String ENABLE_SWIPE = "enableSwipe";
 public final static String START_DAY_OF_WEEK = "startDayOfWeek";
 public final static String SIX_WEEKS_IN_CALENDAR = "sixWeeksInCalendar";
 public final static String ENABLE_CLICK_ON_DISABLED_DATES = "enableClickOnDisabledDates";
+public final static String SQUARE_TEXT_VIEW_CELL = "squareTextViewCell";
 ```
 
 To customize the startDayOfWeek, just use 
@@ -85,6 +101,15 @@ args.putBoolean(CaldroidFragment.ENABLE_CLICK_ON_DISABLED_DATES, true);
 caldroidFragment.setArguments(args);
 ```
 
+By default, Caldroid use square TextView to display date. However when the screen has limited space, user can switch to normal TextView instead:
+
+```java
+Bundle args = new Bundle();
+args.putBoolean(CaldroidFragment.SQUARE_TEXT_VIEW_CELL, false);
+caldroidFragment.setArguments(args);
+```
+
+Caldroid uses `SQUARE_TEXT_VIEW_CELL` parameter internally as well. When the phone is in portrait mode, it will default `SQUARE_TEXT_VIEW_CELL` to `true`, and on landscape, `SQUARE_TEXT_VIEW_CELL` is set to `false`. If your app provides different value, Caldroid will use your value instead of the default one.
 
 To show the caldroid fragment as a dialog, you might want to set the dialog title. There is a convenient method for that:
 
@@ -272,7 +297,17 @@ final CaldroidListener listener = new CaldroidListener() {
 };
 
 caldroidFragment.setCaldroidListener(listener);
+```
 
+User can also customize the gridview that displays dates (background, spacing, etc). First, you need to create your own layout, see `layout/date_grid_fragment.xml` for more detail. Second, you subclass `CaldroidFragment` to supply your gridview layout:
+
+```java
+public class CustomGridFragment extends CaldroidFragment {
+	@Override
+	protected int getGridViewRes() {
+		return R.layout.your_custom_grid_fragment;
+	}
+}
 ```
 
 
